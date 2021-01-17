@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, abort
 import os
 from werkzeug.utils import secure_filename
 
@@ -11,7 +11,8 @@ app.config["APP_ROOT"] = APP_ROOT
 UPLOAD_FOLDER = os.path.join(app.config["APP_ROOT"], "static/")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config['SECRET_KEY'] = 'anystringthatyoulike'
-
+# extra security
+app.config["MAX_CONTENT_LENGTH"] = 1024*1024
 
 # lets display all the images first
 @app.route('/', methods=["GET"])
@@ -20,10 +21,22 @@ def index():
     pictures = os.listdir(app.config["UPLOAD_FOLDER"])
     return render_template("gallery.html", pictures=pictures)
 
+# helper function to check for allowed_files, increase security
+
 
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in app.config["ALLOWED_EXTENSIONS"]
+
+
+@app.route('/public', methods=['GET'])
+def public_pics():
+    pass
+
+
+@app.route('/private', methods=["GET"])
+def private_pics():
+    pass
 
 
 @app.route('/upload', methods=["POST"])
@@ -52,6 +65,8 @@ def upload():
 
                 dest = "/".join([app.config["UPLOAD_FOLDER"], filename])
                 file.save(dest)
+            else:
+                abort(400)
     return redirect('/')
 
 
