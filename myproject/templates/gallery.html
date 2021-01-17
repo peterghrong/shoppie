@@ -1,0 +1,13 @@
+<html>
+    <body>
+        <h1>Add an Image here</h1>
+        <form method="POST" action="/upload" enctype=multipart/form-data>
+            <input type="file" name="pics" multiple />
+            <input type="submit" value="Add" />
+        </form>
+    </body>
+    <!-- gets the pics from the static folder -->
+    {%for picture in pictures%}
+    <img src="{{url_for('static', filename=picture)}}" alt="">
+    {%endfor%}
+</html>
