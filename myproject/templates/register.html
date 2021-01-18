@@ -1,7 +1,7 @@
 {%extends "gallery.html" %} {%block content%}
 <div>
     <h1>Registration</h1>
-    <form action="" method="post" novalidate>
+    <form action="/login" method="post" novalidate>
         {{ register.hidden_tag() }}
         <p>
             {{ register.username.label }}<br />
@@ -11,7 +11,7 @@
             {{ register.password.label }}<br />
             {{ register.password(size=32) }}
         </p>
-        <p type="submit"><a href="/register" value="Register">Register</a></p>
+        <p>{{ register.submit()}}</p>
     </form>
 </div>
 {%endblock%}

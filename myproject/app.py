@@ -25,13 +25,14 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
-    submit = SubmitField('Sign In')
+    submit = SubmitField('Log in')
 
 
 class Register(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = password = PasswordField(
         'Password', validators=[DataRequired()])
+    submit = SubmitField(label=('Sign up'))
 
 
 class User(db.Model):
@@ -39,6 +40,11 @@ class User(db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     pics = db.relationship('Pic', backref='owner', lazy="dynamic")
+
+    def __repr__(self):
+        print(self.id)
+        print(self.username)
+        return
 
 
 class Pic(db.Model):
@@ -66,6 +72,7 @@ def registration():
         new_user.password_hash = register.username.data
         db.session.add(new_user)
         db.session.commit()
+        print("it worked")
         return redirect(url_for('index'))
 
     return render_template('register.html', register=register)
@@ -80,10 +87,6 @@ def login():
         return redirect("/index")
     print("what")
     return render_template('login.html', title='Login', form=form)
-
-
-def register():
-    pass
 
 
 def allowed_file(filename):
