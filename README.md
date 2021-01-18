@@ -6,6 +6,8 @@ Clone the repository
 cd myproject
 pip -r install requirements.txt
 ```
-and use ```python
+and use 
+```python
 flask run 
-``` to host the webapp locally
+``` 
+to host the webapp locally
