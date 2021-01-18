@@ -28,6 +28,12 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 
+class Register(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = password = PasswordField(
+        'Password', validators=[DataRequired()])
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -48,6 +54,21 @@ def index():
     return render_template("gallery.html", pictures=pictures)
 
 # helper function to check for allowed_files, increase security
+
+
+@app.route('/register', methods=["GET", "POST"])
+def registration():
+    register = Register()
+    if register.validate_on_submit():
+        new_user = User()
+        # id field is automatically populated
+        new_user.username = register.username.data
+        new_user.password_hash = register.username.data
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('index'))
+
+    return render_template('register.html', register=register)
 
 
 @app.route('/login', methods=["GET", "POST"])
