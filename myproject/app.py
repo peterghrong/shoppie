@@ -5,6 +5,9 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt, generate_password_hash
+from sqlalchemy.ext.hybrid import hybrid_property
+from flask_login import LoginManager, login_user
 
 # some configurations
 app = Flask(__name__)
@@ -19,6 +22,16 @@ app.config['SECRET_KEY'] = 'anystringthatyoulike'
 app.config["MAX_CONTENT_LENGTH"] = 1024*1024
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+
+@login_manager.user_loader
+def load_user(userid):
+    return User.query.filter(User.id == userid).first()
 
 
 class LoginForm(FlaskForm):
@@ -26,6 +39,11 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Log in')
+
+    def is_correct_password(self, plaintext):
+        if bcrypt.check_password_hash(self._password, plaintext):
+            return True
+        return False
 
 
 class Register(FlaskForm):
@@ -36,10 +54,18 @@ class Register(FlaskForm):
 
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(64), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
+    _password = db.Column(db.String(128))
     pics = db.relationship('Pic', backref='owner', lazy="dynamic")
+
+    @hybrid_property
+    def password(self):
+        return self._password
+
+    @password.setter
+    def _set_password(self, plaintext):
+        self._password = bcrypt.generate_password_hash(plaintext)
 
     def __repr__(self):
         print(self.id)
@@ -65,11 +91,13 @@ def index():
 @app.route('/register', methods=["GET", "POST"])
 def registration():
     register = Register()
+    print("it worked1")
+
     if register.validate_on_submit():
         new_user = User()
         # id field is automatically populated
         new_user.username = register.username.data
-        new_user.password_hash = register.username.data
+        new_user.password = register.password.data
         db.session.add(new_user)
         db.session.commit()
         print("it worked")
@@ -82,11 +110,15 @@ def registration():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        flash('Login requested for user {}, remember_me = {}'.format(
-            form.username.data, form.remember_me.data))
-        return redirect("/index")
-    print("what")
-    return render_template('login.html', title='Login', form=form)
+        username = form.username.data
+        password = form.password.data
+
+        user = User.query.filter_by(username=username).first_or_404()
+        if user.is_correct_password(form.password.data):
+            login_user(user)
+            return redirect(url_for('index'))
+        return redirect(url_for('login'))
+    return render_template('login.html', form=form)
 
 
 def allowed_file(filename):
