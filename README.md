@@ -7,4 +7,5 @@ cd myproject
 pip -r install requirements.txt
 ```
 and use ```python
-flask run ``` to host the webapp locally
+flask run 
+``` to host the webapp locally
