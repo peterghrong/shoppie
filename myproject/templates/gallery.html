@@ -7,11 +7,19 @@
             <input type="submit" value="Add" />
         </form>
         </div>
-        <div>
+
+        <a href="/login">Login</a>
+        <a href="/register">Login</a>
+        {%block content%}
+        {%endblock%}
+
         <!-- gets the pics from the static folder -->
+        <div>
         {%for picture in pictures%}
         <img src="{{url_for('static', filename=picture)}}" alt="{{picture}}">
         {%endfor%}
         </div>
+
+
     </body>
 </html>
