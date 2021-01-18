@@ -29,21 +29,12 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-@login_manager.user_loader
-def load_user(userid):
-    return User.query.filter(User.id == userid).first()
-
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Log in')
-
-    def is_correct_password(self, plaintext):
-        if bcrypt.check_password_hash(self._password, plaintext):
-            return True
-        return False
 
 
 class Register(FlaskForm):
@@ -64,14 +55,18 @@ class User(db.Model):
         return self._password
 
     @password.setter
-    def _set_password(self, plaintext):
+    def password(self, plaintext):
         self._password = bcrypt.generate_password_hash(plaintext)
 
-    def __repr__(self):
-        print(self.id)
-        print(self.username)
-        return
+    def is_correct_password(self, plaintext):
+        if bcrypt.check_password_hash(self._password, plaintext):
+            return True
+        return False
 
+
+@login_manager.user_loader
+def load_user(userid):
+    return User.query.filter(User.id == userid).first()
 
 class Pic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -91,7 +86,7 @@ def index():
 @app.route('/register', methods=["GET", "POST"])
 def registration():
     register = Register()
-    print("it worked1")
+    # print("it worked1")
 
     if register.validate_on_submit():
         new_user = User()
@@ -100,7 +95,7 @@ def registration():
         new_user.password = register.password.data
         db.session.add(new_user)
         db.session.commit()
-        print("it worked")
+        # print("it worked")
         return redirect(url_for('index'))
 
     return render_template('register.html', register=register)
